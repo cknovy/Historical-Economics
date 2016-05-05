@@ -1,0 +1,24 @@
+.. _strips:
+
+******
+What are STRIPS
+******
+
+STRIPS stands for "Treasury's Separate Trading of Registered Interest and Principal Securities." They are fixed income products created by banks and backed by United States government debt. While the United States Treasury does not create zero-coupon debt with a maturity over ninety days, investment banks synthetically create STRIPS by removing the interest payments from a regular treasury note or bond.
+
+They are structured such that an investment bank will create zero coupon bonds based on the interest payment and principal of normal treasury notes. The bank sells the claim on each payment separately, rather than the Treasury note in its entirety.
+
+You can find out more about STRIPS from The NY Fed website_.
+
+.. _The NY Fed website:https://www.newyorkfed.org/aboutthefed/fedpoint/fed42.html
+
+An example of  list is
+
+   1. first item
+   2. second item
+
+ Alternatively
+
+    * first item in list
+
+    * second item in list

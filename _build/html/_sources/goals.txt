@@ -1,0 +1,7 @@
+.. _goals:
+
+******
+Project Goals
+******
+
+Partially, this project aims to teach the members of ECON 298 to use Python for Economic Analysis. The project also aims to show how STRIP yields are affected as date to maturity changes. We will expand the research as we become more capable in Python. For now, we have merely calculated the yield to maturity from the price and plotted it against the days to maturity. 

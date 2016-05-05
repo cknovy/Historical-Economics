@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Plotting yield to maturity of Government STRIPS &mdash; T-Bills 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="T-Bills 1 documentation" href="index.html" />
+    <link rel="next" title="Investigating Revolutionary War bonds" href="bonds.html" />
+    <link rel="prev" title="Welcome to T-Bills’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="plotting-yield-to-maturity-of-government-strips">
+<span id="yields"></span><h1>Plotting yield to maturity of Government STRIPS<a class="headerlink" href="#plotting-yield-to-maturity-of-government-strips" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-are-strips">
+<h2>What are STRIPS?<a class="headerlink" href="#what-are-strips" title="Permalink to this headline">¶</a></h2>
+<p>STRIPS stands for &#8220;Treasury&#8217;s Separate Trading of Registered Interest and Principal Securities.&#8221; They are fixed income products created by banks and backed by United States government debt. While the United States Treasury does not create zero-coupon debt with a maturity over ninety days, investment banks synthetically create STRIPS by removing the interest payments from a regular treasury note or bond.</p>
+<p>They are structured such that an investment bank will create zero coupon bonds based on the interest payment and principal of normal treasury notes. The bank sells the claim on each payment separately, rather than the Treasury note in its entirety.</p>
+</div>
+<div class="section" id="scraping-the-data">
+<h2>Scraping the data<a class="headerlink" href="#scraping-the-data" title="Permalink to this headline">¶</a></h2>
+<p>We scraped data off <a class="reference external" href="http://www.wsj.com/mdc/public/page/2_3020-tstrips.html">the Wall Street Journal&#8217;s</a> website and calculated the yield to maturity and number of days to maturity. We then plotted each data point in plotly.</p>
+<p>Our first iteration of the graph is below. Every time you run the code, the data downloads from the website and the graph is re-plot. Our problem now was to get the data to remain on the graph over multiple days, in order to build a surface plot over time.</p>
+</div>
+<div class="section" id="version-one">
+<h2>Version One<a class="headerlink" href="#version-one" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="the-graph">
+<h2>The graph<a class="headerlink" href="#the-graph" title="Permalink to this headline">¶</a></h2>
+<div style="margin-top:10px;">
+  <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~cknovy/2.embed"></iframe>
+</div></div>
+<div class="section" id="the-code">
+<h2>The code<a class="headerlink" href="#the-code" title="Permalink to this headline">¶</a></h2>
+<p>The code for this graph is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">#Importing required modules</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">plotly.plotly</span> <span class="kn">as</span> <span class="nn">py</span>
+<span class="kn">from</span> <span class="nn">plotly.graph_objs</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#Opening file containing data.</span>
+<span class="n">inFile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;data2.csv&quot;</span><span class="p">)</span>
+<span class="n">dataFile</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">inFile</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="s2">&quot;True&quot;</span><span class="p">)</span>
+<span class="k">print</span> <span class="s2">&quot;Data has been read.&quot;</span>
+
+<span class="c1">#Parsing HTML</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://www.wsj.com/mdc/public/page/2_3020-tstrips.html&quot;</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;lxml&quot;</span><span class="p">)</span>
+
+<span class="c1">#Creating empty variables to scrape data into.</span>
+<span class="n">maturity</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">bidPrice</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">dtm</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">ytm</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1">#Creating an object of the first object that is a dataframe.</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">class_</span><span class="o">=</span><span class="s1">&#39;mdcTable&#39;</span><span class="p">)</span>
+<span class="c1">#Finding all the &lt;tr&gt; tag pairs, less the first few.</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;tr&#39;</span><span class="p">)[</span><span class="mi">75</span><span class="p">:</span><span class="mi">207</span><span class="p">]:</span>
+    <span class="c1">#Create a variable of all the &lt;td&gt; tag pairs within each &lt;tr&gt; pair</span>
+    <span class="n">col</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;td&#39;</span><span class="p">)</span>
+    <span class="c1">#Create variable of string inside first column.</span>
+    <span class="n">col1</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="c1">#and then add to the appropriate variable.</span>
+    <span class="n">maturity</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col1</span><span class="p">)</span>
+    <span class="c1">#create var of float inside second column.</span>
+    <span class="n">col2</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">bidPrice</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col2</span><span class="p">)</span>
+
+
+<span class="c1">##Formatting dates and calculating days to maturity</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">maturity</span><span class="p">:</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s2">&quot;%Y %b </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="n">days</span> <span class="o">=</span> <span class="n">date</span> <span class="o">-</span> <span class="n">start</span>
+    <span class="n">dtm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">days</span><span class="p">)</span>
+    <span class="n">ytm</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+
+<span class="c1">##Creating the data frame.</span>
+
+<span class="c1">#Makes todays date into a string so that we can differentiate columns as they are appended to the data set.</span>
+<span class="n">today</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+
+<span class="c1">#Naming columns for dataframe</span>
+<span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maturity&#39;</span><span class="p">:</span> <span class="n">maturity</span><span class="p">,</span> <span class="s1">&#39;bidPrice&#39;</span><span class="p">:</span> <span class="n">bidPrice</span><span class="p">,</span> <span class="s1">&#39;dtm&#39;</span><span class="p">:</span> <span class="n">dtm</span><span class="p">,</span> <span class="s1">&#39;ytm&#39;</span><span class="p">:</span> <span class="n">ytm</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">:</span> <span class="n">today</span><span class="p">}</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+<span class="c1">#Changing datatypes</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;bidPrice&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;bidPrice&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;ytm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;ytm&#39;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;dtm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;dtm&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+
+<span class="c1">##Calculating yield</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;ytm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">100.0</span><span class="o">/</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;bidPrice&#39;</span><span class="p">])</span><span class="o">**</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;dtm&#39;</span><span class="p">])</span><span class="o">*</span><span class="mi">365</span><span class="p">)</span>
+
+<span class="c1">##Adding today&#39;s data to master file.</span>
+<span class="n">frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataFile</span><span class="p">,</span> <span class="n">df</span><span class="p">]</span>
+<span class="c1">#result.append(df, ignore_index=True)</span>
+<span class="c1">#print result</span>
+
+<span class="c1">##Writing new dataframe to csv file. This write the ENTIRE dataset over again so don&#39;t mess it up.</span>
+<span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;data2.csv&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+<span class="k">print</span> <span class="s2">&quot;Data file updated.&quot;</span>
+
+<span class="c1">#Making the graph --  right now this only does the most current day.</span>
+<span class="n">trace1</span> <span class="o">=</span> <span class="n">Scatter</span><span class="p">(</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;dtm&#39;</span><span class="p">],</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;ytm&#39;</span><span class="p">],</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Yield&#39;</span><span class="p">,</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="n">Marker</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;rgb(234, 153, 153)&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Price of STRIPS&#39;</span><span class="p">,</span>
+    <span class="n">xaxis</span> <span class="o">=</span> <span class="n">XAxis</span><span class="p">(</span>
+        <span class="n">showgrid</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="n">yaxis</span> <span class="o">=</span> <span class="n">YAxis</span><span class="p">(</span>
+        <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Yield&#39;</span><span class="p">,</span>
+        <span class="n">showline</span><span class="o">=</span><span class="bp">False</span>
+        <span class="p">),</span>
+        <span class="n">barmode</span><span class="o">=</span><span class="s1">&#39;group&#39;</span>
+<span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">Data</span><span class="p">([</span><span class="n">trace1</span><span class="p">])</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+<span class="n">plot_url</span> <span class="o">=</span> <span class="n">py</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;Govt STRIPS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Plotting yield to maturity of Government STRIPS</a><ul>
+<li><a class="reference internal" href="#what-are-strips">What are STRIPS?</a></li>
+<li><a class="reference internal" href="#scraping-the-data">Scraping the data</a></li>
+<li><a class="reference internal" href="#version-one">Version One</a></li>
+<li><a class="reference internal" href="#the-graph">The graph</a></li>
+<li><a class="reference internal" href="#the-code">The code</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to T-Bills&#8217;s documentation!</a></li>
+      <li>Next: <a href="bonds.html" title="next chapter">Investigating Revolutionary War bonds</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/yields.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Connor Novy.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/yields.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
